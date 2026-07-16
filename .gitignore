@@ -1,0 +1,12 @@
+# Vertex skill outputs — generated terrain maps live in the working project's
+# vertex/ dir; they are run artifacts, not part of the skill. Anchored with a
+# leading slash so it never matches the skill itself at .claude/skills/vertex/.
+/vertex/
+
+# Machine-local Claude Code config (permission allowlist etc.)
+.claude/settings.local.json
+
+# OS / Python cruft
+.DS_Store
+__pycache__/
+*.pyc
