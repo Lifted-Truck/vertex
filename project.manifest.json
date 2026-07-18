@@ -1,0 +1,48 @@
+{
+  "schema": "project-manifest.0 (draft — kit v2 will formalize)",
+  "status": "RATIFIED 2026-06-26 (retrofit plan + manifest approved by user)",
+  "provenance": "retrofit — answers inferred from code/docs, un-inferrable items ratified by the user 2026-06-26",
+  "survey": {
+    "what_is_it": "Claude Code skill — 'Vertex': domain reconnaissance. Maps the topology of the user's ignorance in an unfamiliar domain and routes to competency; produces a calibrated terrain map, does not answer the domain question. Form: SKILL.md + references/ + scripts/.",
+    "architecture_rung": {
+      "choice": 1,
+      "menu": [
+        "1: single thread",
+        "2: thread + subagents/verifier",
+        "3: organ fleet"
+      ],
+      "earned_by": "One skill = docs + a few bash/python scripts; no parallelizable seams and no token budget that justifies a fleet. Agents copied but inert; critic available for review beats without escalating the standing rung. NOTE: the skill's own Survey stage forks a subagent at runtime — that is skill behavior, not the project's development rung."
+    },
+    "domain_core_llm_must_not_own": "The Layer-0 validator (layer0_check.py) — schema + five-stage + sourced-concept + calibration-field checks are deterministic and CI-blocking. The terrain schema (the Map contract) and the Calibrate doctrine are fixed references, not model discretion. AI owns only: interpreting the domain, surveying, and producing the map/route within those gates.",
+    "oracle_shape": {
+      "layer_0": "deterministic ./verify fast — structure, manifest JSON, SKILL.md frontmatter, script syntax (py ast + bash -n), and a layer0 self-test (tests/fixtures/good_map.md passes, bad_map.md fails)",
+      "layer_e": "human-run known-domain confabulation audit (ROADMAP Q-004); run /vertex on a domain the human knows cold and check against ground truth they hold. Not scripted — the oracle is the human's expertise. ./verify full names it, never fakes it."
+    },
+    "second_implementation": false,
+    "consumers_and_providers": {
+      "consumes": [
+        "autonomous (harness kit, doctrine, retrofit procedure)"
+      ],
+      "consumed_by": [
+        "the user, interactively via /vertex"
+      ],
+      "integration_briefs": "none — Vertex is self-contained; not an ecosystem provider/consumer in the INTEGRATIONS sense, so no briefs filed"
+    },
+    "parallel_audit_thread": false,
+    "knowledge_loop_tags": [
+      "vertex",
+      "reconnaissance",
+      "calibration",
+      "epistemics",
+      "skill-authoring"
+    ],
+    "lifespan_autonomy": {
+      "lifespan": "long-lived — designed for a diffable terrain-map corpus that accretes over months",
+      "autonomy_tier": "interactive; the skill runs on user invocation. Development is single-threaded (rung 1). No unattended/scheduled autonomy."
+    }
+  },
+  "pending_revision": {
+    "brief": "VERTEX_Skill_Trinary_Update.md",
+    "summary": "replace the concept/system binary with a field/artifact/system trinary cut by terrain ontology; ratified in the brief, NOT yet implemented (ROADMAP Q-001)"
+  }
+}

@@ -10,3 +10,8 @@
 .DS_Store
 __pycache__/
 *.pyc
+
+# <!-- HARNESS-RETROFIT:START (2026-06-26) — appended, existing rules above win -->
+# Harness machine state (oracle last-run marker + dirty flag); not tracked.
+.harness/
+# <!-- HARNESS-RETROFIT:END -->

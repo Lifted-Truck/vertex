@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# verify — oracle dispatcher. The harness's only interface to project QC.
+# Usage: ./verify fast | full | report
+# Contract: exit 0 = green, nonzero = red. Writes .harness/last-verify.json.
+#
+# Vertex is a Claude Code SKILL (docs + bash/python scripts), not a service.
+# So the oracle wraps what actually protects the skill's contract:
+#   - structure/manifest sanity
+#   - the SKILL.md frontmatter is intact (name: vertex)
+#   - the scripts parse (python ast + bash -n) — a broken script is a broken skill
+#   - the Layer-0 validator SELF-TESTS: it must PASS tests/fixtures/good_map.md
+#     and FAIL tests/fixtures/bad_map.md. This is the real oracle of the skill's
+#     core contract (five stages + schema + sourced concepts + calibration).
+set -uo pipefail
+
+TARGET="${1:-fast}"
+HARNESS_DIR=".harness"
+SKILL_DIR=".claude/skills/vertex"
+mkdir -p "$HARNESS_DIR"
+
+record() { # record <target> <exit_code>
+  local git_hash; git_hash=$(git rev-parse --short HEAD 2>/dev/null || echo "no-git")
+  printf '{"target":"%s","exit":%d,"git":"%s","ts":"%s"}\n' \
+    "$1" "$2" "$git_hash" "$(date -u +%FT%TZ)" > "$HARNESS_DIR/last-verify.json"
+  rm -f "$HARNESS_DIR/dirty"
+  return "$2"
+}
+
+fast() {
+  # ---- Layer-0: seconds, not minutes. CI-blocking. -------------------------
+  local ok=0
+
+  # 1. Scaffolding present.
+  for f in README.md CLAUDE.md ROADMAP.md DECISIONS.md project.manifest.json; do
+    [ -f "$f" ] || { echo "verify[fast]: missing $f" >&2; ok=1; }
+  done
+
+  # 2. Manifest is valid JSON.
+  python3 -c "import json;json.load(open('project.manifest.json'))" 2>/dev/null \
+    || { echo "verify[fast]: project.manifest.json is not valid JSON" >&2; ok=1; }
+
+  # 3. The skill itself is intact: frontmatter carries name: vertex, and the
+  #    protected Calibrate reference still exists (a core invariant).
+  [ -f "$SKILL_DIR/SKILL.md" ] \
+    && grep -qE "^name:[[:space:]]*vertex" "$SKILL_DIR/SKILL.md" \
+    || { echo "verify[fast]: SKILL.md missing or lost 'name: vertex'" >&2; ok=1; }
+  [ -f "$SKILL_DIR/references/calibration.md" ] \
+    || { echo "verify[fast]: protected calibration doctrine missing" >&2; ok=1; }
+  [ -f "$SKILL_DIR/references/terrain-schema.md" ] \
+    || { echo "verify[fast]: terrain schema (the Map contract) missing" >&2; ok=1; }
+
+  # 4. Scripts parse — a broken script is a broken skill.
+  for p in "$SKILL_DIR"/scripts/*.py; do
+    [ -e "$p" ] || continue
+    python3 -c "import ast,sys; ast.parse(open(sys.argv[1]).read())" "$p" \
+      || { echo "verify[fast]: python syntax error in $p" >&2; ok=1; }
+  done
+  for s in "$SKILL_DIR"/scripts/*.sh; do
+    [ -e "$s" ] || continue
+    bash -n "$s" || { echo "verify[fast]: bash syntax error in $s" >&2; ok=1; }
+  done
+
+  # 5. Layer-0 self-test: the gate must accept a good map and reject a bad one.
+  local checker="$SKILL_DIR/scripts/layer0_check.py"
+  if [ -f "$checker" ]; then
+    if [ -f tests/fixtures/good_map.md ]; then
+      python3 "$checker" tests/fixtures/good_map.md >/dev/null 2>&1 \
+        || { echo "verify[fast]: layer0 REJECTED the good fixture (false negative)" >&2; ok=1; }
+    else
+      echo "verify[fast]: missing tests/fixtures/good_map.md" >&2; ok=1
+    fi
+    if [ -f tests/fixtures/bad_map.md ]; then
+      if python3 "$checker" tests/fixtures/bad_map.md >/dev/null 2>&1; then
+        echo "verify[fast]: layer0 ACCEPTED the bad fixture (false positive)" >&2; ok=1
+      fi
+    else
+      echo "verify[fast]: missing tests/fixtures/bad_map.md" >&2; ok=1
+    fi
+  else
+    echo "verify[fast]: layer0_check.py missing — skill has no deterministic gate" >&2; ok=1
+  fi
+
+  [ "$ok" = 0 ] && echo "verify[fast]: green"
+  return $ok
+}
+
+full() {
+  fast || return $?
+  # ---- Layer-E: the confabulation audit. -----------------------------------
+  # Layer-E is a KNOWN-DOMAIN human-run audit (see ROADMAP Q-004): run /vertex
+  # on a domain the human knows cold and check the map against ground truth
+  # they personally hold. It cannot be scripted honestly (the oracle is the
+  # human's own expertise), so `full` currently equals `fast` and Layer-E is
+  # tracked as a ROADMAP gate, not silently claimed as passing here.
+  echo "verify[full]: Layer-0 green; Layer-E is a human-run audit (ROADMAP Q-004)"
+  return 0
+}
+
+case "$TARGET" in
+  fast)   fast;  record fast  $? ;;
+  full)   full;  record full  $? ;;
+  report) cat "$HARNESS_DIR/last-verify.json" 2>/dev/null || { echo '{"target":null,"exit":null}'; exit 1; } ;;
+  *)      echo "usage: ./verify fast|full|report" >&2; exit 64 ;;
+esac
