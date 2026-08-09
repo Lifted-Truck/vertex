@@ -80,6 +80,30 @@ fast() {
     echo "verify[fast]: layer0_check.py missing — skill has no deterministic gate" >&2; ok=1
   fi
 
+  # 6. Renderer gate (Q-006, ratified 2026-07-21): render_map.py must render
+  #    the good fixture with exit 0, non-empty output, no external refs, and
+  #    deterministically (two runs byte-identical). Failure modes here are the
+  #    renderer becoming a confabulation surface or a network dependency.
+  local renderer="$SKILL_DIR/scripts/render_map.py"
+  if [ -f "$renderer" ]; then
+    local r1="$HARNESS_DIR/render1.html" r2="$HARNESS_DIR/render2.html"
+    if python3 "$renderer" tests/fixtures/good_map.md > "$r1" 2>/dev/null \
+       && python3 "$renderer" tests/fixtures/good_map.md > "$r2" 2>/dev/null; then
+      [ -s "$r1" ] \
+        || { echo "verify[fast]: renderer produced empty output" >&2; ok=1; }
+      cmp -s "$r1" "$r2" \
+        || { echo "verify[fast]: renderer is nondeterministic (runs differ)" >&2; ok=1; }
+      if grep -qE 'src="http|href="http|@import|url\(http' "$r1"; then
+        echo "verify[fast]: renderer output has external refs (must be offline)" >&2; ok=1
+      fi
+    else
+      echo "verify[fast]: renderer FAILED on the good fixture" >&2; ok=1
+    fi
+    rm -f "$r1" "$r2"
+  else
+    echo "verify[fast]: render_map.py missing (Q-006 gate)" >&2; ok=1
+  fi
+
   [ "$ok" = 0 ] && echo "verify[fast]: green"
   return $ok
 }

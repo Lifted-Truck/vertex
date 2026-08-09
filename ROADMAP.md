@@ -13,9 +13,10 @@ State lives here; conversations are ephemeral.
   bad fixture fails). `full` = fast today. **Gap:** Layer-E (the known-domain
   confabulation audit, scaffolding-doc §9) is human-run and NOT scripted — it
   is Q-004 below, not a silent pass.
-- **Last human ratification:** 2026-07-20 (visual-renderer track Q-006 +
-  bridge-mode design Q-007 approved for roadmap + prototype); prior 2026-06-26
-  (retrofit plan + manifest).
+- **Last human ratification:** 2026-07-21 (Q-006 prototype accepted after
+  visual review; Layer-0 renderer gate wired into `./verify` — an oracle edit,
+  human-gated, ratified in conversation). Prior: 2026-07-20 (Q-006/Q-007
+  roadmap + prototype), 2026-06-26 (retrofit plan + manifest).
 
 ## Invariants under active protection
 
@@ -98,7 +99,13 @@ See CLAUDE.md §Domain. The two most at risk from the queue below:
   attempted.
 
 ### Q-006 — Deterministic visual renderer for terrain maps
-- **Status:** open (prototype in progress, 2026-07-20)
+- **Status:** prototype shipped + ratified (2026-07-21); Layer-0 gate wired
+  (`./verify` check 6: fixture renders, non-empty, deterministic, no external
+  refs — negative-tested). **Remaining before close:** Route trail on the chart
+  (design constraint 5); band-matcher under-claiming on low-token-overlap
+  labels (e.g. the Fourier convergence controversy renders unassessed though
+  banded high — safe direction, still a gap); trinary tracking on Q-001 land.
+  Trace: traces/2026-07-21-q006-renderer-prototype.md
 - **Scope:** new `scripts/render_map.py` (Python 3; PyYAML if present, regex
   fallback — the project convention in CLAUDE.md §Domain / `layer0_check.py`);
   a Layer-0 branch that runs it on `tests/fixtures/good_map.md`; **no schema
@@ -171,6 +178,9 @@ See CLAUDE.md §Domain. The two most at risk from the queue below:
 ## Decision log
 
 <!-- One line per ratified decision, newest first, linking to traces/. -->
+- 2026-07-21 — Q-006 prototype ratified after visual review; renderer gate
+  added to `./verify` (oracle edit, human-approved; negative-tested red/green).
+  (trace: traces/2026-07-21-q006-renderer-prototype.md)
 - 2026-07-20 — Open the visual-output track: Q-006 deterministic renderer
   (uncertainty-first, no unmeasured channels, prototype vs. current binary
   schema) + Q-007 bridge-mode design; identity ratified as **both** personal
