@@ -115,14 +115,24 @@ def check_map_regex(block: str) -> None:
     for key in REQUIRED_KEYS:
         if not re.search(rf"^{key}\s*:", block, re.MULTILINE):
             fail(f"Map missing required key: {key}")
-    if not re.search(r"^profile\s*:\s*(concept|system)\b", block, re.MULTILINE):
+    # The optional quote is load-bearing: the schema writes `profile: "concept"`,
+    # so a quote-blind pattern rejected every valid map on any box without
+    # PyYAML — including a bare CI runner (found 2026-08-18 testing CI parity).
+    if not re.search(r"""^profile\s*:\s*["']?(concept|system)\b""", block, re.MULTILINE):
         fail("profile must be concept|system")
     # Within key_concepts, every 'term:' must be matched by a non-empty 'source:'.
     kc = re.search(r"^key_concepts\s*:(.*?)(?=^\w|\Z)", block,
                    re.DOTALL | re.MULTILINE)
     if kc:
         terms = len(re.findall(r"\bterm\s*:", kc.group(1)))
-        sources = len(re.findall(r"\bsource\s*:\s*\S+", kc.group(1)))
+        # Read each source's VALUE and strip quotes before judging emptiness.
+        # The old `\S+` counted `source: ""` as present — silently unenforcing
+        # the cardinal anti-confabulation rule on the fallback path, which is
+        # the one a PyYAML-less CI runner uses. Never match on non-emptiness of
+        # the raw text when the empty value can be spelled with quotes.
+        sources = sum(
+            1 for v in re.findall(r"\bsource\s*:\s*(.*)$", kc.group(1), re.MULTILINE)
+            if v.strip().strip("\"'").strip())
         if terms == 0:
             fail("key_concepts has no entries")
         elif sources < terms:

@@ -1,5 +1,6 @@
 {
   "schema": "project-manifest.0 (draft — kit v2 will formalize)",
+  "kit_version": "2.4.1",
   "status": "RATIFIED 2026-06-26 (retrofit plan + manifest approved by user)",
   "provenance": "retrofit — answers inferred from code/docs, un-inferrable items ratified by the user 2026-06-26",
   "survey": {

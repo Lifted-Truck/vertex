@@ -1,0 +1,51 @@
+# Kit v2 CI — runs the project's ONE oracle (./verify fast) in the cloud on
+# every PR and every push to main, mirroring the local Stop-hook gate.
+# Green in CI == green locally. CI adds no checks of its own.
+#
+# Economics (kit/templates/ci.github.yml): PRs + pushes to main only,
+# superseded runs cancelled, docs-only changes skipped, `verify full` stays
+# OUT of CI — `full` names the Layer-E confabulation audit, which is
+# human-run by design (ROADMAP Q-004) and cannot be honestly automated.
+#
+# DELIBERATELY NO `pip install pyyaml`. Vertex's Layer-0 gate uses PyYAML when
+# present and a regex fallback otherwise; a bare runner therefore exercises the
+# FALLBACK path on every push, which is the path no developer runs locally and
+# so the one that rots unseen. It shipped two real defects found on 2026-08-18
+# (a quote-blind profile check that rejected every valid map, and a source
+# check that counted `source: ""` as present — silently unenforcing the
+# cardinal "every key_concept carries a non-empty source" rule). Pinning
+# PyYAML here would have hidden both. If a future gate genuinely needs a
+# dependency, add it — but keep one job that runs without it.
+
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+
+# Cancel an in-progress run when a newer commit lands on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: verify fast
+        run: |
+          chmod +x verify
+          ./verify fast

@@ -141,3 +141,26 @@ like a log.
 ### LIBRARY entry template
 `[Lxxxx] <title> | tier | added: YYYY-MM-DD | tags: … | lesson: … | evidence: … | falsifier: … | supersedes: …`
 <!-- KNOWLEDGE-LOOP:END -->
+
+<!-- KIT-MAILBOX:START (kit 2.1.0, applied 2026-08-18) -->
+## Mailbox
+
+Scope discipline for cross-repo exchanges (INTEGRATIONS §3). Three questions,
+three answers:
+
+- **Who owes me / what is addressed to us?** `integrations/` **in this repo**
+  is the only place briefs to Vertex land. If it is not in our tree, it is not
+  addressed to us.
+- **Did anyone answer my brief?** Responses to briefs *we* filed live in the
+  **provider's** tree (e.g. `autonomous/integrations/vertex/`), not ours. They
+  must be **pulled and read** — nothing delivers them here.
+- **Should I act on an exchange between two other repos?** No. Other repos'
+  exchanges may be **read freely** — they are not secret, and reading them is
+  often how you learn the ecosystem — but they are never **acted on**, and
+  never **raised to the human as ours**. If one genuinely concerns Vertex, the
+  correct move is to file our own brief, not to answer someone else's.
+
+Why this is written down: on 2026-08-17 agents in several unrelated projects
+each warned the human about the same single brief sitting in autonomous's
+mailbox. Tooling caused it; the rule had never been stated either way.
+<!-- KIT-MAILBOX:END -->
