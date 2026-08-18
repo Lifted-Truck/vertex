@@ -39,11 +39,27 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Action majors age on GitHub's clock, not ours: a pinned major goes from
+      # silently-forced-onto-a-new-node to hard failure on a date nobody here
+      # picks. Observed directly in run 32153300514 (2026-08-18) — v4/v5 logged
+      # "Node 20 is being deprecated, this workflow is running with Node 24 by
+      # default" while still passing. Bumped to track the kit template, which
+      # bumps only after a real run proves it; a major bump cannot be checked
+      # locally, so the next CI run is the proof.
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.x"
+
+      # Diagnostic, not a gate. The header above claims CI exercises the
+      # PyYAML-less FALLBACK path; that claim is only true while the runner
+      # image happens to lack PyYAML. Printing it makes the claim auditable in
+      # the log instead of inferred from the interpreter path — assert the
+      # effective state, never the declared one.
+      - name: which Layer-0 path will run
+        run: |
+          python3 -c "import importlib.util as u; print('PyYAML present -> STRICT path' if u.find_spec('yaml') else 'no PyYAML -> REGEX FALLBACK path (intended)')"
 
       - name: verify fast
         run: |
