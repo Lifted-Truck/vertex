@@ -11,6 +11,11 @@
 #   - the Layer-0 validator SELF-TESTS: it must PASS tests/fixtures/good_map.md
 #     and FAIL tests/fixtures/bad_map.md. This is the real oracle of the skill's
 #     core contract (five stages + schema + sourced concepts + calibration).
+#
+# THIS FILE IS PROJECT-OWNED. The kit-owned gates (record, leak_gate,
+# kit_integrity) live in `.kit/kit-gates.sh`, vendored + checksummed against
+# `.kit/MANIFEST` — do not edit that file and do not copy its contents here.
+# Update it with:  python3 ~/Documents/Claude/autonomous/kit/kit_sync.py .
 set -uo pipefail
 
 TARGET="${1:-fast}"
@@ -18,17 +23,21 @@ HARNESS_DIR=".harness"
 SKILL_DIR=".claude/skills/vertex"
 mkdir -p "$HARNESS_DIR"
 
-record() { # record <target> <exit_code>
-  local git_hash; git_hash=$(git rev-parse --short HEAD 2>/dev/null || echo "no-git")
-  printf '{"target":"%s","exit":%d,"git":"%s","ts":"%s"}\n' \
-    "$1" "$2" "$git_hash" "$(date -u +%FT%TZ)" > "$HARNESS_DIR/last-verify.json"
-  rm -f "$HARNESS_DIR/dirty"
-  return "$2"
-}
+# Kit-owned gates. A repo missing this file is not a lesser repo, it is an
+# UNGATED one — so a hard exit, never a degraded run: a silently skipped
+# privacy gate is exactly the shape of bug the gate exists to prevent.
+if [ -r .kit/kit-gates.sh ]; then
+  . .kit/kit-gates.sh
+else
+  echo "verify: .kit/kit-gates.sh missing — run kit_sync.py (gates cannot be skipped)" >&2
+  exit 1
+fi
 
 fast() {
   # ---- Layer-0: seconds, not minutes. CI-blocking. -------------------------
   local ok=0
+  kit_integrity || ok=1      # kit-owned files must match .kit/MANIFEST
+  leak_gate     || ok=1      # privacy gate: kit-core, keep it first
 
   # 1. Scaffolding present.
   for f in README.md CLAUDE.md ROADMAP.md DECISIONS.md project.manifest.json; do
